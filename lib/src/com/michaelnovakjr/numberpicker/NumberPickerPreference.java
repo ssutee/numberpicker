@@ -1,11 +1,9 @@
 package com.michaelnovakjr.numberpicker;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 public class NumberPickerPreference extends DialogPreference {
@@ -47,13 +45,17 @@ public class NumberPickerPreference extends DialogPreference {
         mPicker.setCurrent(getValue());
     }
 
-    public void onClick(DialogInterface dialog, int which) {
-        switch (which) {
-            case DialogInterface.BUTTON_POSITIVE:
-                saveValue(mPicker.getCurrent());
-                break;
-            default:
-                break;
+    @Override
+    protected void onDialogClosed(boolean positiveResult) {
+        super.onDialogClosed(positiveResult);
+
+        final int origValue = getValue();
+        final int curValue = mPicker.getCurrent();
+
+        if (positiveResult && (curValue != origValue)) {
+            if (callChangeListener(curValue)) {
+                saveValue(curValue);
+            }
         }
     }
 
@@ -61,9 +63,8 @@ public class NumberPickerPreference extends DialogPreference {
         mPicker.setRange(start, end);
     }
 
-    private void saveValue(int val) {
-        getEditor().putInt(getKey(), val).commit();
-        notifyChanged();
+    private boolean saveValue(int val) {
+        return persistInt(val);
     }
 
     private int getValue() {
